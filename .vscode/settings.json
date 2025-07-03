@@ -1,0 +1,25 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}\\driver\\cmsis\\core",
+        "${workspaceFolder}\\driver\\st\\ll\\inc",
+        "${workspaceFolder}\\driver\\st\\dev\\inc",
+        "${workspaceFolder}\\driver\\cmsis\\dsp\\inc",
+        "${workspaceFolder}\\user\\inc",
+        "${workspaceFolder}\\lib\\oled\\inc"
+    ],
+    "files.associations": {
+        "core_cm4.h": "c",
+        "cmsis_version.h": "c",
+        "stm32g431xx.h": "c",
+        "stm32g4xx.h": "c",
+        "system_stm32g4xx.h": "c",
+        "oled.h": "cpp",
+        "stm32g4xx_ll_usart.h": "c",
+        "stm32g4xx_ll_dmamux.h": "c"
+    },
+    "C_Cpp.default.defines": [
+        "USE_FULL_LL_DRIVER"
+    ],
+    "C_Cpp.default.compilerPath": "C:\\Program Files (x86)\\Arm GNU Toolchain arm-none-eabi\\14.2 rel1\\bin\\arm-none-eabi-gcc.exe",
+    "cortex-debug.variableUseNaturalFormat": true
+}
