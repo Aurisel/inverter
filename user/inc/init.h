@@ -1,10 +1,85 @@
 #include "ll.h"
 
-/* inline void ADC_Config()
+inline void ADC_Config(uint16_t *address)
 {
-    LL_APB1_GRP1_EnableClock()
-    LL_ADC_InitTypeDef
-} */
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+    LL_GPIO_SetPinMode(GPIOA,LL_GPIO_PIN_0,LL_GPIO_MODE_ANALOG);
+    LL_GPIO_SetPinPull(GPIOA,LL_GPIO_PIN_0,LL_GPIO_PULL_NO);
+    LL_GPIO_SetPinMode(GPIOA,LL_GPIO_PIN_1,LL_GPIO_MODE_ANALOG);
+    LL_GPIO_SetPinPull(GPIOA,LL_GPIO_PIN_1,LL_GPIO_PULL_NO);
+
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+    LL_DMA_ConfigTransfer(DMA1,LL_DMA_CHANNEL_2,LL_DMA_DIRECTION_PERIPH_TO_MEMORY | LL_DMA_MODE_NORMAL | LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT | LL_DMA_MDATAALIGN_HALFWORD | LL_DMA_PDATAALIGN_HALFWORD | LL_DMA_PRIORITY_HIGH);
+    LL_DMA_ConfigAddresses(DMA1,LL_DMA_CHANNEL_2,LL_ADC_DMA_GetRegAddr(ADC1,LL_ADC_DMA_REG_REGULAR_DATA),(uint32_t)address,LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
+    LL_DMA_SetPeriphRequest(DMA1,LL_DMA_CHANNEL_2,LL_DMAMUX_REQ_ADC1);
+    LL_DMA_SetDataLength(DMA1,LL_DMA_CHANNEL_2,2);
+    LL_DMA_EnableIT_TC(DMA1,LL_DMA_CHANNEL_2);
+    NVIC_SetPriority(DMA1_Channel2_IRQn,1);
+    NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+    LL_DMA_EnableChannel(DMA1,LL_DMA_CHANNEL_2);
+    
+    
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
+    LL_TIM_SetPrescaler(TIM6,3999);
+    LL_TIM_SetAutoReload(TIM6,3999);
+    LL_TIM_SetCounterMode(TIM6,LL_TIM_COUNTERMODE_UP);
+    LL_TIM_SetClockDivision(TIM6,LL_TIM_CLOCKDIVISION_DIV1);
+    LL_TIM_SetRepetitionCounter(TIM6,0);
+    LL_TIM_EnableUpdateEvent(TIM6);
+    LL_TIM_SetTriggerOutput(TIM6,LL_TIM_TRGO_UPDATE);
+    LL_TIM_EnableIT_UPDATE(TIM6);
+
+    LL_ADC_CommonInitTypeDef adc_common;
+    adc_common.CommonClock = LL_ADC_CLOCK_ASYNC_DIV128;
+    adc_common.MultiDMATransfer = LL_ADC_MULTI_REG_DMA_EACH_ADC;
+    adc_common.Multimode = LL_ADC_MULTI_INDEPENDENT;
+    adc_common.MultiTwoSamplingDelay =LL_ADC_MULTI_TWOSMP_DELAY_2CYCLES;
+    LL_ADC_CommonInit(ADC12_COMMON,&adc_common);
+
+    LL_RCC_SetADCClockSource(LL_RCC_ADC12_CLKSOURCE_PLL);
+    while(LL_RCC_GetADCClockSource(LL_RCC_ADC12_CLKSOURCE) != LL_RCC_ADC12_CLKSOURCE_PLL);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_ADC12);
+    
+    LL_ADC_SetGainCompensation(ADC1, 0);
+    LL_ADC_InitTypeDef adc;
+    adc.DataAlignment = LL_ADC_DATA_ALIGN_RIGHT;
+    adc.LowPowerMode = LL_ADC_LP_MODE_NONE;
+    adc.Resolution = LL_ADC_RESOLUTION_12B;
+    LL_ADC_Init(ADC1,&adc);
+
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_12CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_12CYCLES_5);
+    LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SINGLE_ENDED);
+    LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SINGLE_ENDED);
+    LL_ADC_REG_SetSequencerRanks(ADC1,LL_ADC_REG_RANK_1,LL_ADC_CHANNEL_1);
+    LL_ADC_REG_SetSequencerRanks(ADC1,LL_ADC_REG_RANK_2,LL_ADC_CHANNEL_2);
+    LL_ADC_REG_InitTypeDef adc_reg;
+    adc_reg.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
+    adc_reg.DMATransfer = LL_ADC_REG_DMA_TRANSFER_LIMITED;
+    adc_reg.Overrun = LL_ADC_REG_OVR_DATA_OVERWRITTEN;
+    adc_reg.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
+    adc_reg.SequencerLength = LL_ADC_REG_SEQ_SCAN_ENABLE_2RANKS;
+    adc_reg.TriggerSource = LL_ADC_REG_TRIG_EXT_TIM6_TRGO;
+    LL_ADC_REG_Init(ADC1,&adc_reg);
+    LL_ADC_ConfigOverSamplingRatioShift(ADC1,LL_ADC_OVS_RATIO_4,LL_ADC_OVS_SHIFT_RIGHT_2);
+    LL_ADC_SetOverSamplingDiscont(ADC1,LL_ADC_OVS_REG_CONT);
+    LL_ADC_SetOverSamplingScope(ADC1,LL_ADC_OVS_GRP_REGULAR_RESUMED);
+    
+    LL_ADC_DisableDeepPowerDown(ADC1);
+    while(LL_ADC_IsDeepPowerDownEnabled(ADC1));
+
+    LL_ADC_StartCalibration(ADC1,LL_ADC_SINGLE_ENDED);
+    while(LL_ADC_IsCalibrationOnGoing(ADC1));
+    for(volatile uint32_t i = 0;i < 10000;++i);
+    LL_ADC_EnableInternalRegulator(ADC1);
+    while(!LL_ADC_IsInternalRegulatorEnabled(ADC1));
+    for(volatile uint32_t i = 0;i < 10000;++i);
+    
+    LL_ADC_Enable(ADC1);
+    while(!LL_ADC_IsEnabled(ADC1));
+    LL_ADC_REG_StartConversion(ADC1);
+}
 
 inline void SPI_Config()
 {
@@ -27,9 +102,7 @@ inline void SPI_Config()
     LL_SPI_SetTransferBitOrder(SPI1,LL_SPI_MSB_FIRST);
     LL_SPI_SetTransferDirection(SPI1,LL_SPI_HALF_DUPLEX_TX);
     LL_SPI_SetDataWidth(SPI1,LL_SPI_DATAWIDTH_8BIT);
-
     LL_SPI_EnableDMAReq_TX(SPI1);
-
     LL_DMA_ConfigTransfer(DMA1,LL_DMA_CHANNEL_1,LL_DMA_DIRECTION_MEMORY_TO_PERIPH | LL_DMA_MODE_NORMAL | LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT | LL_DMA_MDATAALIGN_HALFWORD | LL_DMA_PDATAALIGN_HALFWORD | LL_DMA_PRIORITY_LOW);
 }
 
@@ -47,6 +120,50 @@ inline void TIM7_Config()
     LL_TIM_EnableCounter(TIM7);
 }
 
+inline void PWM_Config()
+{
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
+    LL_GPIO_InitTypeDef gpio;
+    
+    gpio.Mode = LL_GPIO_MODE_ALTERNATE;
+    gpio.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    gpio.Pull = LL_GPIO_PULL_NO;
+    gpio.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+
+    gpio.Alternate = LL_GPIO_AF_4;
+    gpio.Pin = LL_GPIO_PIN_13;
+    LL_GPIO_Init(GPIOC,&gpio);
+
+    gpio.Alternate = LL_GPIO_AF_6;
+    gpio.Pin = LL_GPIO_PIN_8;
+    LL_GPIO_Init(GPIOA,&gpio);
+
+    LL_TIM_InitTypeDef tim;
+    tim.Prescaler = 7;
+    tim.Autoreload = 1999;
+    tim.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+    tim.CounterMode = LL_TIM_COUNTERMODE_UP;
+    tim.RepetitionCounter = 0x0000;
+    LL_TIM_Init(TIM1,&tim);
+    LL_TIM_OC_InitTypeDef tim_oc;
+    tim_oc.OCMode = LL_TIM_OCMODE_PWM1;
+    tim_oc.OCState = LL_TIM_OCSTATE_ENABLE;
+    tim_oc.OCNState = LL_TIM_OCSTATE_ENABLE;
+    tim_oc.CompareValue = 1000;
+    tim_oc.OCIdleState = LL_TIM_OCIDLESTATE_LOW;
+    tim_oc.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
+    tim_oc.OCNPolarity = LL_TIM_OCPOLARITY_HIGH;
+    tim_oc.OCPolarity = LL_TIM_OCPOLARITY_HIGH;
+    LL_TIM_OC_Init(TIM1,LL_TIM_CHANNEL_CH1,&tim_oc);
+    LL_TIM_OC_EnablePreload(TIM1,LL_TIM_CHANNEL_CH1);
+    NVIC_SetPriority(TIM1_UP_TIM16_IRQn, 0);
+    NVIC_EnableIRQ(TIM1_UP_TIM16_IRQn);
+    LL_TIM_EnableIT_UPDATE(TIM1);
+    LL_TIM_EnableAllOutputs(TIM1);
+}
+
 inline void GPIO_Config()
 {
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
@@ -54,6 +171,12 @@ inline void GPIO_Config()
     LL_GPIO_SetPinOutputType(GPIOC, LL_GPIO_PIN_6, LL_GPIO_OUTPUT_PUSHPULL);
     LL_GPIO_SetPinSpeed(GPIOC, LL_GPIO_PIN_6, LL_GPIO_SPEED_FREQ_HIGH);
     LL_GPIO_SetOutputPin(GPIOC,LL_GPIO_PIN_6);
+
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+    LL_GPIO_SetPinMode(GPIOB,LL_GPIO_PIN_14,LL_GPIO_MODE_OUTPUT);
+    LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_14, LL_GPIO_OUTPUT_PUSHPULL);
+    LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_14, LL_GPIO_SPEED_FREQ_HIGH);
+    LL_GPIO_ResetOutputPin(GPIOB,LL_GPIO_PIN_14);
 }
 
 inline void USART_Config()
@@ -94,9 +217,11 @@ inline void Sys_Config()
 {
     LL_RCC_HSE_Enable();
     while(LL_RCC_HSE_IsReady() != 1);
+    LL_RCC_PLL_ConfigDomain_ADC(LL_RCC_PLLSOURCE_HSE,LL_RCC_PLLM_DIV_1,40,LL_RCC_PLLP_DIV_2);
     LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE,LL_RCC_PLLM_DIV_1,40,LL_RCC_PLLR_DIV_2);
     LL_RCC_PLL_Enable();
     LL_RCC_PLL_EnableDomain_SYS();
+    LL_RCC_PLL_EnableDomain_ADC();
     while(LL_RCC_PLL_IsReady() != 1);
     FLASH -> ACR &= ~FLASH_ACR_LATENCY;
     FLASH -> ACR |= FLASH_ACR_LATENCY_4WS;

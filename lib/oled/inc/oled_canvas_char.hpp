@@ -10,7 +10,7 @@ class oled_canvas_char : public oled_base_canvas
         uint16_t totalColumn;
     public:
         void clearLine(uint16_t line);
-        void showString(uint16_t line,uint16_t column,char *string);
+        void showString(uint16_t line,uint16_t column,const char *string);
         void showChar(uint16_t line,uint16_t column,char character);
 };
 

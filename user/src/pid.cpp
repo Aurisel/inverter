@@ -5,7 +5,7 @@ pid_base_t::pid_base_t()
     next = nullptr;
 }
 
-pid_t::pid_t(float kp, float ki, float kd, float target ,float integralLimit) : pid_base_t()
+pid::pid(float kp, float ki, float kd, float target ,float integralLimit) : pid_base_t()
 {
     this -> kp = kp;
     this -> ki = ki;
@@ -21,7 +21,7 @@ pid_base_t& pid_base_t::operator<<(pid_base_t& other)
     return other;
 }
 
-float pid_t::update(float current)
+float pid::update(float current)
 {
     float error = this -> target - current;
     this -> integral += error;
@@ -43,7 +43,7 @@ float pid_t::update(float current)
     return uk;
 }
 
-void pid_t::setTarget(float target)
+void pid::setTarget(float target)
 {
     this -> target = target;
     this -> lastError = 0.0f;

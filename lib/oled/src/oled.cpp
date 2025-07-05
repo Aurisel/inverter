@@ -3,18 +3,24 @@
 
 void oled_base_interface::transferComplete()
 {
-    this -> status = interface_status::IDLE;
+    this -> status = oled_status::OLED_IDLE;
+}
+
+bool oled_base_interface::isBusy()
+{
+    if(this -> status == oled_status::OLED_BUSY)
+        return true;
+    else
+        return false;
 }
 
 
 oled_result oled_base_device::flush(oled_base_canvas& canvas)
 {
-    this -> selectDevice();
-    if(this -> interface -> sendData((uint8_t *)canvas.buffer, canvas.buffer_size) == oled_result::OLED_FAIL)
-    {
+    if(this -> interface -> isBusy())
         return oled_result::OLED_FAIL;
-    }
-    return oled_result::OLED_SUCCESS;
+    this -> selectDevice();
+    return this -> interface -> sendData((uint8_t *)canvas.buffer, canvas.buffer_size);
 }
 
 void oled_base_device::flushComplete()

@@ -11,8 +11,7 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            "configFiles": ["interface/cmsis-dap.cfg",
-                            "target/stm32g4x.cfg"],
+            "configFiles": ["interface/cmsis-dap.cfg","target/stm32g4x.cfg"],
             "searchDir": ["${workspaceFolder}/../../application/openocd/share/openocd/scripts"],
             "runToEntryPoint": "main",
             "showDevDebugOutput": "raw"

@@ -44,15 +44,13 @@ oled_interface_spi_dma_ll::oled_interface_spi_dma_ll(const spi_config &spi,const
     LL_SPI_SetStandard(spi.spi,LL_SPI_PROTOCOL_MOTOROLA);
     LL_SPI_SetClockPhase(spi.spi,LL_SPI_PHASE_1EDGE);
     LL_SPI_SetClockPolarity(spi.spi,LL_SPI_POLARITY_LOW);
-    LL_SPI_SetBaudRatePrescaler(spi.spi,LL_SPI_BAUDRATEPRESCALER_DIV16);
+    LL_SPI_SetBaudRatePrescaler(spi.spi,LL_SPI_BAUDRATEPRESCALER_DIV32);
     LL_SPI_SetTransferBitOrder(spi.spi,LL_SPI_MSB_FIRST);
     LL_SPI_SetTransferDirection(spi.spi,LL_SPI_FULL_DUPLEX);
     LL_SPI_SetDataWidth(spi.spi,LL_SPI_DATAWIDTH_8BIT);
     LL_SPI_SetNSSMode(spi.spi,LL_SPI_NSS_SOFT);
     LL_SPI_Enable(spi.spi);
     
-    
-
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
     dma_clk_enable((uint32_t)dma.dma,dma.channel);
     LL_DMA_ConfigTransfer(dma.dma,dma.channel,LL_DMA_DIRECTION_MEMORY_TO_PERIPH | LL_DMA_MODE_NORMAL | LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT | LL_DMA_MDATAALIGN_BYTE | LL_DMA_PDATAALIGN_BYTE | LL_DMA_PRIORITY_LOW);
@@ -70,22 +68,22 @@ oled_interface_spi_dma_ll::oled_interface_spi_dma_ll(const spi_config &spi,const
 
 oled_result oled_interface_spi_dma_ll::sendCommand(uint8_t command)
 {
-    if(this -> status == interface_status::BUSY)
+    if(this -> status == oled_status::OLED_BUSY)
         return oled_result::OLED_FAIL;
-    this -> status = interface_status::BUSY;
+    this -> status = oled_status::OLED_BUSY;
     LL_GPIO_ResetOutputPin(this -> dc_group,this -> dc_pin);
     LL_SPI_TransmitData8(this -> spi,command);
     while(!LL_SPI_IsActiveFlag_TXE(this -> spi));
     while(LL_SPI_IsActiveFlag_BSY(this -> spi));
-    this -> status = interface_status::IDLE;
+    this -> status = oled_status::OLED_IDLE;
     return oled_result::OLED_SUCCESS;
 }
 
 oled_result oled_interface_spi_dma_ll::sendData(uint8_t *buffer, uint32_t size)
 {
-    if(this -> status == interface_status::BUSY)
+    if(this -> status == oled_status::OLED_BUSY)
         return oled_result::OLED_FAIL;
-    this -> status = interface_status::BUSY;
+    this -> status = oled_status::OLED_BUSY;
     uint32_t min_size = (size > this -> buffer_size) ? this -> buffer_size : size;
     memcpy(this -> buffer,buffer,min_size);
     LL_DMA_SetDataLength(this -> dma,this -> dma_channel,min_size);
@@ -97,7 +95,7 @@ oled_result oled_interface_spi_dma_ll::sendData(uint8_t *buffer, uint32_t size)
 void oled_interface_spi_dma_ll::transferComplete()
 {
     while(LL_SPI_IsActiveFlag_BSY(this -> spi));
-    this -> status = interface_status::IDLE;
+    this -> status = oled_status::OLED_IDLE;
 }
 
 

@@ -34,10 +34,10 @@ class d_base_t
         float lastError;
 };
 
-class pid_t : public pid_base_t, public p_base_t, public i_base_t, public d_base_t
+class pid : public pid_base_t, public p_base_t, public i_base_t, public d_base_t
 {
     public:
-        pid_t(float kp, float ki, float kd, float target ,float integralLimit);
+        pid(float kp, float ki, float kd, float target ,float integralLimit);
         float update(float current);
         void setTarget(float target);
 };

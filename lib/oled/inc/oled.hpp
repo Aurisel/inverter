@@ -3,10 +3,10 @@
 
 #include "stdint.h"
 
-enum interface_status
+enum oled_status
 {
-    IDLE,
-    BUSY
+    OLED_IDLE,
+    OLED_BUSY
 };
 
 enum oled_result
@@ -19,9 +19,10 @@ class oled_base_interface
 {
     protected:
         void *buffer;
-        interface_status status;
+        oled_status status;
         uint32_t buffer_size;
     public:
+        bool isBusy();
         virtual void transferComplete();
         virtual oled_result sendCommand(uint8_t command) = 0;
         virtual oled_result sendData(uint8_t *buffer, uint32_t size) = 0;

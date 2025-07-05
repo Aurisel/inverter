@@ -14,9 +14,10 @@ class oled_device_ssd1306:public oled_base_device
         void selectDevice();
         void releaseDevice();
         void resetDevice();
+        oled_result initDevice();
     public:
         oled_device_ssd1306(oled_base_interface *interface,GPIO_TypeDef *cs_group,uint32_t cs_pin,GPIO_TypeDef *rst_group,uint32_t rst_pin);
-        oled_result initDevice();
+        
 };
 
 

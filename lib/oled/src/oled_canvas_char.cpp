@@ -22,7 +22,7 @@ void oled_canvas_char::showChar(uint16_t line,uint16_t column,char character)
     *((uint32_t *)(((char *)this -> buffer) + size_per_half_line * ((line - 1) * 2 + 1) + size_per_half_column * ((column - 1) * 2 + 1))) = OLED_F8x16_LE[character - ' '][3];
 }
 
-void oled_canvas_char::showString(uint16_t line,uint16_t column,char *string)
+void oled_canvas_char::showString(uint16_t line,uint16_t column,const char *string)
 {
     if(line == 0 || line > this -> totalLine || column == 0 || column > this -> totalColumn)
         return;
