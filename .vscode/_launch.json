@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "${workspaceFolder}/bin/main.elf",
+            "name": "Debug with OpenOCD",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink-v2.cfg","target/stm32g4x.cfg"],
+            "searchDir": ["${workspaceFolder}/../../application/openocd/share/openocd/scripts"],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "raw"
+        }
+
+    ]
+}

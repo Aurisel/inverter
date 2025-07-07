@@ -21,8 +21,8 @@ inline void ADC_Config(uint16_t *address)
     
     
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
-    LL_TIM_SetPrescaler(TIM6,3999);
-    LL_TIM_SetAutoReload(TIM6,3999);
+    LL_TIM_SetPrescaler(TIM6,7);
+    LL_TIM_SetAutoReload(TIM6,199);
     LL_TIM_SetCounterMode(TIM6,LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetClockDivision(TIM6,LL_TIM_CLOCKDIVISION_DIV1);
     LL_TIM_SetRepetitionCounter(TIM6,0);
@@ -31,10 +31,10 @@ inline void ADC_Config(uint16_t *address)
     LL_TIM_EnableIT_UPDATE(TIM6);
 
     LL_ADC_CommonInitTypeDef adc_common;
-    adc_common.CommonClock = LL_ADC_CLOCK_ASYNC_DIV128;
+    adc_common.CommonClock = LL_ADC_CLOCK_ASYNC_DIV4;
     adc_common.MultiDMATransfer = LL_ADC_MULTI_REG_DMA_EACH_ADC;
     adc_common.Multimode = LL_ADC_MULTI_INDEPENDENT;
-    adc_common.MultiTwoSamplingDelay =LL_ADC_MULTI_TWOSMP_DELAY_2CYCLES;
+    adc_common.MultiTwoSamplingDelay =LL_ADC_MULTI_TWOSMP_DELAY_1CYCLE;
     LL_ADC_CommonInit(ADC12_COMMON,&adc_common);
 
     LL_RCC_SetADCClockSource(LL_RCC_ADC12_CLKSOURCE_PLL);
@@ -48,8 +48,8 @@ inline void ADC_Config(uint16_t *address)
     adc.Resolution = LL_ADC_RESOLUTION_12B;
     LL_ADC_Init(ADC1,&adc);
 
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_12CYCLES_5);
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_12CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_47CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_47CYCLES_5);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SINGLE_ENDED);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SINGLE_ENDED);
     LL_ADC_REG_SetSequencerRanks(ADC1,LL_ADC_REG_RANK_1,LL_ADC_CHANNEL_1);
@@ -114,7 +114,7 @@ inline void TIM7_Config()
     LL_TIM_SetCounterMode(TIM7,LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetClockDivision(TIM7,LL_TIM_CLOCKDIVISION_DIV1);
     LL_TIM_SetRepetitionCounter(TIM7,0);
-    NVIC_SetPriority(TIM7_IRQn, 1);
+    NVIC_SetPriority(TIM7_IRQn, 2);
     NVIC_EnableIRQ(TIM7_IRQn);
     LL_TIM_EnableIT_UPDATE(TIM7);
     LL_TIM_EnableCounter(TIM7);
