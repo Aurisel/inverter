@@ -48,8 +48,8 @@ inline void ADC_Config(uint16_t *address)
     adc.Resolution = LL_ADC_RESOLUTION_12B;
     LL_ADC_Init(ADC1,&adc);
 
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_47CYCLES_5);
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_47CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_12CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_12CYCLES_5);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SINGLE_ENDED);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SINGLE_ENDED);
     LL_ADC_REG_SetSequencerRanks(ADC1,LL_ADC_REG_RANK_1,LL_ADC_CHANNEL_1);
@@ -69,15 +69,18 @@ inline void ADC_Config(uint16_t *address)
     LL_ADC_DisableDeepPowerDown(ADC1);
     while(LL_ADC_IsDeepPowerDownEnabled(ADC1));
 
-    LL_ADC_StartCalibration(ADC1,LL_ADC_SINGLE_ENDED);
-    while(LL_ADC_IsCalibrationOnGoing(ADC1));
-    for(volatile uint32_t i = 0;i < 10000;++i);
+    
     LL_ADC_EnableInternalRegulator(ADC1);
     while(!LL_ADC_IsInternalRegulatorEnabled(ADC1));
-    for(volatile uint32_t i = 0;i < 10000;++i);
+    for(volatile uint32_t i = 0;i < 50000;++i);
     
+    LL_ADC_StartCalibration(ADC1,LL_ADC_SINGLE_ENDED);
+    while(LL_ADC_IsCalibrationOnGoing(ADC1));
+    for(volatile uint32_t i = 0;i < 50000;++i);
+
     LL_ADC_Enable(ADC1);
     while(!LL_ADC_IsEnabled(ADC1));
+    for(volatile uint32_t i = 0;i < 50000;++i);
     LL_ADC_REG_StartConversion(ADC1);
 }
 
@@ -109,15 +112,15 @@ inline void SPI_Config()
 inline void TIM7_Config()
 {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
-    LL_TIM_SetPrescaler(TIM7,3999);
-    LL_TIM_SetAutoReload(TIM7,3999);
+    LL_TIM_SetPrescaler(TIM7,199);
+    LL_TIM_SetAutoReload(TIM7,399);
     LL_TIM_SetCounterMode(TIM7,LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetClockDivision(TIM7,LL_TIM_CLOCKDIVISION_DIV1);
     LL_TIM_SetRepetitionCounter(TIM7,0);
-    NVIC_SetPriority(TIM7_IRQn, 2);
+    NVIC_SetPriority(TIM7_IRQn, 0);
     NVIC_EnableIRQ(TIM7_IRQn);
     LL_TIM_EnableIT_UPDATE(TIM7);
-    LL_TIM_EnableCounter(TIM7);
+    
 }
 
 inline void PWM_Config()
@@ -177,6 +180,35 @@ inline void GPIO_Config()
     LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_14, LL_GPIO_OUTPUT_PUSHPULL);
     LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_14, LL_GPIO_SPEED_FREQ_HIGH);
     LL_GPIO_ResetOutputPin(GPIOB,LL_GPIO_PIN_14);
+}
+
+inline void GPIO_Int_Config()
+{
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+    LL_GPIO_SetPinMode(GPIOB,LL_GPIO_PIN_8,LL_GPIO_MODE_OUTPUT);
+    LL_GPIO_SetPinOutputType(GPIOB, LL_GPIO_PIN_8, LL_GPIO_OUTPUT_PUSHPULL);
+    LL_GPIO_SetPinSpeed(GPIOB, LL_GPIO_PIN_8, LL_GPIO_SPEED_FREQ_HIGH);
+    LL_GPIO_ResetOutputPin(GPIOB,LL_GPIO_PIN_8);
+
+    LL_GPIO_InitTypeDef gpio;
+    gpio.Mode = LL_GPIO_MODE_INPUT;
+    gpio.Pull = LL_GPIO_PULL_NO;
+    gpio.Pin = LL_GPIO_PIN_9;
+    LL_GPIO_Init(GPIOB,&gpio);
+
+    /* LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+    LL_EXTI_InitTypeDef exti;
+    exti.Line_0_31 = LL_EXTI_LINE_9;
+    exti.LineCommand = FunctionalState::ENABLE;
+    exti.Mode = LL_EXTI_MODE_IT;
+    exti.Trigger = LL_EXTI_TRIGGER_RISING;
+    LL_EXTI_Init(&exti);
+    LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTB,LL_SYSCFG_EXTI_LINE9);
+    
+    NVIC_SetPriority(IRQn_Type::EXTI9_5_IRQn,3);
+    NVIC_EnableIRQ(IRQn_Type::EXTI9_5_IRQn); */
+
+    
 }
 
 inline void USART_Config()

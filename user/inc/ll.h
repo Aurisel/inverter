@@ -10,4 +10,7 @@
 #include "stm32g4xx_ll_dma.h"
 #include "stm32g4xx_ll_usart.h"
 #include "stm32g4xx_ll_dmamux.h"
+#include "stm32g4xx_ll_exti.h"
+#include "stm32g4xx_ll_system.h"
+
 #endif
