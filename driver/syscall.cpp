@@ -19,9 +19,7 @@ extern "C"
     char *__env[1] = { 0 };
     char **environ = __env;
 
-    void initialise_monitor_handles()
-    {
-    }
+    void _init(void) {}
 
     int _getpid(void)
     {

@@ -12,5 +12,6 @@
 #include "stm32g4xx_ll_dmamux.h"
 #include "stm32g4xx_ll_exti.h"
 #include "stm32g4xx_ll_system.h"
+#include "stm32g4xx_ll_dac.h"
 
 #endif

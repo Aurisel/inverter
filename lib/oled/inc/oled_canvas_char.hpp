@@ -3,24 +3,28 @@
 
 #include "oled.hpp"
 
-class oled_canvas_char : public oled_base_canvas
+namespace oled
 {
-    protected:
-        uint16_t totalLine;
-        uint16_t totalColumn;
-    public:
-        void clearLine(uint16_t line);
-        void showString(uint16_t line,uint16_t column,const char *string);
-        void showChar(uint16_t line,uint16_t column,char character);
-};
+    class char_canvas : public base::canvas
+    {
+        protected:
+            uint16_t totalLine;
+            uint16_t totalColumn;
+        public:
+            void clearLine(uint16_t line);
+            void showString(uint16_t line,uint16_t column,const char *string);
+            void showConvertString(uint16_t line,uint16_t column,const char *string);
+            void showChar(uint16_t line,uint16_t column,char character);
+    };
 
-class oled_canvas_char_small : public oled_canvas_char
-{
-    protected:
-        uint32_t _buffer[256];
-    public:
-        oled_canvas_char_small();
-};
+    class char_canvas_small : public char_canvas
+    {
+        protected:
+            uint32_t _buffer[256];
+        public:
+            char_canvas_small();
+    };
+}
 
 
 

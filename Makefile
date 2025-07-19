@@ -1,86 +1,101 @@
 #TOOLCHAIN_PATH := C:/Users/jack/arm-none-eabi-gcc/bin/
-TARGET := main
+TARGET			:=	main
+TOOLCHAIN_PREFIX:=	arm-none-eabi-
+CC				:=	g++
+C_STANDARD		:=	c++11
+AS				:=	as
+AR				:=	ar
+SIZE			:=	size
+OBJCOPY			:=	objcopy
+HEADER_PATHS	:=	driver/st/ll/inc \
+					driver/st/dev/inc \
+					driver/cmsis/core \
+					driver/cmsis/dsp/inc \
+					user/inc \
+					lib/oled/inc \
+					lib/pll
+
+CFALG_HEADER	:=	$(patsubst %,-I%,$(HEADER_PATHS))
+
+LIB_PATHS		:=	lib driver/cmsis/dsp/lib
+LIB				:=	ll arm_cortexM4lf_math
+LINK_PATH		:=	$(patsubst %,-L%,$(LIB_PATHS))
+LINK_LIB		:=	$(patsubst %,-l%,$(LIB))
+
+CFLAG			:=	-mcpu=cortex-m4 \
+					-mfpu=fpv4-sp-d16 \
+					-mthumb \
+					-mfloat-abi=hard \
+					-std=$(C_STANDARD) \
+					-ffunction-sections \
+					-fdata-sections \
+					-g \
+					-gstrict-dwarf \
+					-Wall \
+					-O3 \
+					$(CFALG_HEADER) \
+					-Wl,--gc-sections \
+					-nostartfiles \
+					-specs=nano.specs \
+					-fno-exceptions \
+					-fno-rtti \
+					-DUSE_FULL_LL_DRIVER
+LINK_FLAG		:=	$(LINK_PATH) $(LINK_LIB)
+
+
+SOURCE_PATHS	:=	driver/st/dev/src \
+					driver \
+					user/src \
+					lib/oled/src \
+					lib/pll
+
+COMPILE_MODE ?= DEBUG
+
+BUILD_DIR := build
+BINARY_DIR := bin
+
+
 LINK_SCRIPT := driver/stm32g431cbux.ld
-TOOLCHAIN_PREFIX := arm-none-eabi-
-CC := g++
-AS := as
-AR := ar
-SIZE := size
-OBJCOPY := objcopy
-CFLAG := -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard -O0 -Idriver/st/ll/inc -Idriver/st/dev/inc -Idriver/cmsis/core -Idriver/cmsis/dsp/inc -Iuser/inc -Ilib/oled/inc -g -save-temps=obj -Wl,--gc-sections -DUSE_FULL_LL_DRIVER -ffunction-sections -fdata-sections -specs=nano.specs -Ldriver/cmsis/dsp/lib -larm_cortexM4lf_math
-BUILD_DIR := build/
-BINARY_DIR := bin/
-#LINK := stlink-v2
-LINK := cmsis-dap
+STARTUP_FILE := driver/startup_stm32g431xx.s
+
+OPENOCD_INTERFACE := cmsis-dap
+#OPENOCD_INTERFACE := stlink-v2
+OPENOCD_TARGET := stm32g4x
+
 
 OBJ :=
-
-LL_SRC := $(wildcard driver/st/ll/src/*.c)
-OBJ += $(patsubst driver/st/ll/src/%.c,build/%.o,$(LL_SRC))
-
-DEV_SRC := $(wildcard driver/st/dev/src/*.c)
-OBJ += $(patsubst driver/st/dev/src/%.c,build/%.o,$(DEV_SRC))
-
-START_UP := $(wildcard driver/*.s)
-OBJ += $(patsubst driver/%.s,build/%.o,$(START_UP))
-
-POSIX_SRC := $(wildcard driver/*.cpp)
-OBJ += $(patsubst driver/%.cpp,build/%.o,$(POSIX_SRC))
-
-USER_SRC := $(wildcard user/src/*.cpp)
-OBJ += $(patsubst user/src/%.cpp,build/%.o,$(USER_SRC))
-
-USER_SRC := $(wildcard user/src/*.c)
-OBJ += $(patsubst user/src/%.c,build/%.o,$(USER_SRC))
-
-LIB_SRC := $(wildcard lib/oled/src/*.cpp)
-OBJ += $(patsubst lib/oled/src/%.cpp,build/%.o,$(LIB_SRC))
+OBJ += $(foreach SOURCE_PATH,$(SOURCE_PATHS),$(patsubst $(SOURCE_PATH)/%.c,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_PATH)/*.c)))
+OBJ += $(foreach SOURCE_PATH,$(SOURCE_PATHS),$(patsubst $(SOURCE_PATH)/%.cpp,$(BUILD_DIR)/%.o,$(wildcard $(SOURCE_PATH)/*.cpp)))
+OBJ += $(BUILD_DIR)/$(notdir $(basename $(STARTUP_FILE))).o
+VPATH := $(SOURCE_PATHS) $(dir $(STARTUP_FILE))
 
 
+
+$(shell mkdir -p $(BINARY_DIR) $(BUILD_DIR))
 
 all: download
 
 download: bin
-	@openocd -f interface/$(LINK).cfg -f target/stm32g4x.cfg -c "adapter speed 5000; program bin/main.elf verify reset exit"
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(SIZE) bin/$(TARGET).elf
+	@openocd -f interface/$(OPENOCD_INTERFACE).cfg -f target/$(OPENOCD_TARGET).cfg -c "adapter speed 5000; program $(BINARY_DIR)/$(TARGET).elf verify reset exit"
+	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(SIZE) $(BINARY_DIR)/$(TARGET).elf
 
 bin: $(OBJ)
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) $(CFLAG) -o bin/$(TARGET).elf -T $(LINK_SCRIPT) -Wl,-Map=bin/$(TARGET).map $(OBJ)
-	@echo "LD     OBJ"
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(SIZE) bin/$(TARGET).elf
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(OBJCOPY) -O binary bin/$(TARGET).elf bin/$(TARGET).bin
+	@echo "LD      $(LINK_SCRIPT)"
+	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) $(CFLAG) -o $(BINARY_DIR)/$(TARGET).elf -T $(LINK_SCRIPT) -Wl,-Map=$(BINARY_DIR)/$(TARGET).map $(OBJ) $(LINK_FLAG)
+	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(SIZE) $(BINARY_DIR)/$(TARGET).elf
+	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(OBJCOPY) -O binary $(BINARY_DIR)/$(TARGET).elf $(BINARY_DIR)/$(TARGET).bin
 	
-build/%.o: driver/st/ll/src/%.c
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
+$(BUILD_DIR)/%.o: %.c
 	@echo "CC      $<"
-
-build/%.o: driver/st/dev/src/%.c
 	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CC      $<"
 
-build/%.o: driver/%.s
+$(BUILD_DIR)/%.o: %.cpp
+	@echo "CXX     $<"
 	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
+
+$(BUILD_DIR)/%.o: %.s
 	@echo "AS      $<"
-
-build/%.o: driver/%.cpp
 	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CXX     $<"
-
-build/%.o: lib/oled/src/%.cpp
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CXX     $<"
-
-build/%.o: lib/oled/src/%.c
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CC      $<"
-
-build/%.o: user/src/%.cpp
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CXX     $<"
-
-build/%.o: user/src/%.c
-	@$(TOOLCHAIN_PATH)$(TOOLCHAIN_PREFIX)$(CC) -c $(CFLAG) -o $@ $<
-	@echo "CC      $<"
 
 clean:
-	@rm -rf build/* bin/*
+	@rm -rf $(BUILD_DIR)/* $(BINARY_DIR)/*

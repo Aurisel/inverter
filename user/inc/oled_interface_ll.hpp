@@ -27,21 +27,22 @@ struct dma_config
 };
 
 
-
-class oled_interface_spi_dma_ll :public oled_base_interface
+namespace oled
 {
-    private:
-        uint32_t _buffer[256];
-        DMA_TypeDef *dma;
-        uint32_t dma_channel;
-        SPI_TypeDef *spi;
-        GPIO_TypeDef *dc_group;
-        uint32_t dc_pin;
-    public:
-        void transferComplete();
-        oled_interface_spi_dma_ll(const spi_config &spi,const dma_config &dma, GPIO_TypeDef *dc_group, uint32_t dc_pin);
-        oled_result sendCommand(uint8_t command);
-        oled_result sendData(uint8_t *buffer, uint32_t size);
-};
-
+    class interface_spi_dma_ll :public base::interface
+    {
+        private:
+            uint32_t _buffer[256];
+            DMA_TypeDef *dma;
+            uint32_t dma_channel;
+            SPI_TypeDef *spi;
+            GPIO_TypeDef *dc_group;
+            uint32_t dc_pin;
+        public:
+            void transferComplete();
+            interface_spi_dma_ll(const spi_config &spi,const dma_config &dma, GPIO_TypeDef *dc_group, uint32_t dc_pin);
+            result sendCommand(uint8_t command);
+            result sendData(uint8_t *buffer, uint32_t size);
+    };
+}
 #endif

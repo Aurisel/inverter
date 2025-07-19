@@ -6,6 +6,7 @@
         "${workspaceFolder}\\driver\\cmsis\\dsp\\inc",
         "${workspaceFolder}\\user\\inc",
         "${workspaceFolder}\\lib\\oled\\inc",
+        "${workspaceFolder}\\lib\\pll",
         "C:\\Users\\jack\\arm-none-eabi-gcc\\arm-none-eabi\\include"
     ],
     "files.associations": {
@@ -21,12 +22,14 @@
         "unordered_map": "cpp",
         "iostream": "cpp",
         "algorithm": "cpp",
-        "format": "cpp"
+        "format": "cpp",
+        "cmath": "cpp"
     },
     "C_Cpp.default.defines": [
         "USE_FULL_LL_DRIVER"
     ],
-    "C_Cpp.default.compilerPath": "C:\\Program Files (x86)\\Arm GNU Toolchain arm-none-eabi\\14.2 rel1\\bin\\arm-none-eabi-gcc.exe",
+    "C_Cpp.default.compilerPath": "C:\\Program\u0020Files\u0020(x86)\\Arm\u0020GNU\u0020Toolchain\u0020arm-none-eabi\\14.2\u0020rel1\\bin\\arm-none-eabi-gcc.exe",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
-    "cortex-debug.variableUseNaturalFormat": true
+    "cortex-debug.variableUseNaturalFormat": true,
+    "editor.fontFamily": "'Cascadia Mono','Cascadia Mono','Cascadia Mono'"
 }

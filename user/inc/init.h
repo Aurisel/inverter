@@ -1,5 +1,14 @@
 #include "ll.h"
 
+inline void LED_Config()
+{
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+    LL_GPIO_SetPinMode(GPIOB,LL_GPIO_PIN_12,LL_GPIO_MODE_OUTPUT);
+    LL_GPIO_SetPinOutputType(GPIOB,LL_GPIO_PIN_12, LL_GPIO_OUTPUT_PUSHPULL);
+    LL_GPIO_SetPinSpeed(GPIOB,LL_GPIO_PIN_12, LL_GPIO_SPEED_FREQ_HIGH);
+    LL_GPIO_ResetOutputPin(GPIOB,LL_GPIO_PIN_12);
+}
+
 inline void ADC_Config(uint16_t *address)
 {
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
@@ -48,8 +57,8 @@ inline void ADC_Config(uint16_t *address)
     adc.Resolution = LL_ADC_RESOLUTION_12B;
     LL_ADC_Init(ADC1,&adc);
 
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_12CYCLES_5);
-    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_12CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SAMPLINGTIME_24CYCLES_5);
+    LL_ADC_SetChannelSamplingTime(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SAMPLINGTIME_24CYCLES_5);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_1,LL_ADC_SINGLE_ENDED);
     LL_ADC_SetChannelSingleDiff(ADC1,LL_ADC_CHANNEL_2,LL_ADC_SINGLE_ENDED);
     LL_ADC_REG_SetSequencerRanks(ADC1,LL_ADC_REG_RANK_1,LL_ADC_CHANNEL_1);
@@ -68,19 +77,19 @@ inline void ADC_Config(uint16_t *address)
     
     LL_ADC_DisableDeepPowerDown(ADC1);
     while(LL_ADC_IsDeepPowerDownEnabled(ADC1));
+    for(volatile uint32_t i = 0;i < 500000;++i);
 
-    
     LL_ADC_EnableInternalRegulator(ADC1);
     while(!LL_ADC_IsInternalRegulatorEnabled(ADC1));
-    for(volatile uint32_t i = 0;i < 50000;++i);
+    for(volatile uint32_t i = 0;i < 500000;++i);
     
     LL_ADC_StartCalibration(ADC1,LL_ADC_SINGLE_ENDED);
     while(LL_ADC_IsCalibrationOnGoing(ADC1));
-    for(volatile uint32_t i = 0;i < 50000;++i);
+    for(volatile uint32_t i = 0;i < 500000;++i);
 
     LL_ADC_Enable(ADC1);
     while(!LL_ADC_IsEnabled(ADC1));
-    for(volatile uint32_t i = 0;i < 50000;++i);
+    for(volatile uint32_t i = 0;i < 500000;++i);
     LL_ADC_REG_StartConversion(ADC1);
 }
 
@@ -112,8 +121,8 @@ inline void SPI_Config()
 inline void TIM7_Config()
 {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
-    LL_TIM_SetPrescaler(TIM7,199);
-    LL_TIM_SetAutoReload(TIM7,399);
+    LL_TIM_SetPrescaler(TIM7,49);
+    LL_TIM_SetAutoReload(TIM7,99);
     LL_TIM_SetCounterMode(TIM7,LL_TIM_COUNTERMODE_UP);
     LL_TIM_SetClockDivision(TIM7,LL_TIM_CLOCKDIVISION_DIV1);
     LL_TIM_SetRepetitionCounter(TIM7,0);
@@ -227,8 +236,9 @@ inline void USART_Config()
 
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
-    LL_USART_SetPrescaler(USART1,LL_USART_PRESCALER_DIV16);
-    LL_USART_SetBaudRate(USART1,160000000,LL_USART_PRESCALER_DIV16,LL_USART_OVERSAMPLING_16,115200);
+    LL_USART_SetPrescaler(USART1,LL_USART_PRESCALER_DIV8);
+    LL_USART_SetOverSampling(USART1,LL_USART_OVERSAMPLING_8);
+    LL_USART_SetBaudRate(USART1,160000000,LL_USART_PRESCALER_DIV8,LL_USART_OVERSAMPLING_8,2000000);
     LL_USART_SetDataWidth(USART1,LL_USART_DATAWIDTH_8B);
     LL_USART_SetHWFlowCtrl(USART1,LL_USART_HWCONTROL_NONE);
     LL_USART_SetParity(USART1,LL_USART_PARITY_NONE);
@@ -237,19 +247,19 @@ inline void USART_Config()
     LL_USART_ConfigAsyncMode(USART1);
     LL_USART_Enable(USART1);
 
-    LL_USART_EnableDMAReq_TX(USART1);
+    /* LL_USART_EnableDMAReq_TX(USART1);
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMAMUX1);
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
     LL_DMA_ConfigTransfer(DMA1,LL_DMA_CHANNEL_1,LL_DMA_DIRECTION_MEMORY_TO_PERIPH | LL_DMA_MODE_NORMAL | LL_DMA_PERIPH_NOINCREMENT | LL_DMA_MEMORY_INCREMENT | LL_DMA_MDATAALIGN_BYTE | LL_DMA_PDATAALIGN_BYTE | LL_DMA_PRIORITY_LOW);
     LL_DMA_SetPeriphAddress(DMA1,LL_DMA_CHANNEL_1,LL_USART_DMA_GetRegAddr(USART1,LL_USART_DMA_REG_DATA_TRANSMIT));
-    LL_DMA_SetPeriphRequest(DMA1,LL_DMA_CHANNEL_1,LL_DMAMUX_REQ_USART1_TX);
+    LL_DMA_SetPeriphRequest(DMA1,LL_DMA_CHANNEL_1,LL_DMAMUX_REQ_USART1_TX); */
 }
 
 inline void Sys_Config()
 {
     LL_RCC_HSE_Enable();
     while(LL_RCC_HSE_IsReady() != 1);
-    LL_RCC_PLL_ConfigDomain_ADC(LL_RCC_PLLSOURCE_HSE,LL_RCC_PLLM_DIV_1,40,LL_RCC_PLLP_DIV_2);
+    LL_RCC_PLL_ConfigDomain_ADC(LL_RCC_PLLSOURCE_HSE,LL_RCC_PLLM_DIV_1,40,LL_RCC_PLLP_DIV_4);
     LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE,LL_RCC_PLLM_DIV_1,40,LL_RCC_PLLR_DIV_2);
     LL_RCC_PLL_Enable();
     LL_RCC_PLL_EnableDomain_SYS();
@@ -263,4 +273,25 @@ inline void Sys_Config()
     
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+}
+
+inline void DAC_Config()
+{
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+    LL_GPIO_SetPinMode(GPIOA,LL_GPIO_PIN_4,LL_GPIO_MODE_ANALOG);
+    LL_GPIO_SetPinPull(GPIOA,LL_GPIO_PIN_4,LL_GPIO_PULL_NO);
+
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_DAC1);
+    LL_DAC_InitTypeDef dac_init;
+    dac_init.OutputBuffer = LL_DAC_OUTPUT_BUFFER_DISABLE;
+    dac_init.OutputConnection = LL_DAC_OUTPUT_CONNECT_GPIO;
+    dac_init.OutputMode = LL_DAC_OUTPUT_MODE_NORMAL;
+    dac_init.TriggerSource = LL_DAC_TRIG_SOFTWARE;
+    dac_init.WaveAutoGeneration = LL_DAC_WAVE_AUTO_GENERATION_NONE;
+    LL_DAC_Init(DAC1,LL_DAC_CHANNEL_1,&dac_init);
+    LL_DAC_SetSignedFormat(DAC1,LL_DAC_CHANNEL_1,LL_DAC_SIGNED_FORMAT_DISABLE);
+    LL_DAC_SetHighFrequencyMode(DAC1,LL_DAC_HIGH_FREQ_MODE_ABOVE_160MHZ);
+    LL_DAC_EnableTrigger(DAC1,LL_DAC_CHANNEL_1);
+    LL_DAC_Enable(DAC1,LL_DAC_CHANNEL_1);
+    for(volatile uint32_t i = 0;i < 50000;++i);
 }
